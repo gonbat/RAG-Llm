@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ask", type=str, default="What are all AWS regions where SageMaker is available?")
+    parser.add_argument("--ask", type=str, default="What is SageMaker?")
     parser.add_argument("--index", type=str, default="rag")
     parser.add_argument("--region", type=str, default="us-east-1")
     parser.add_argument("--bedrock-model-id", type=str, default="meta.llama2-70b-chat-v1")
@@ -51,8 +51,8 @@ def create_opensearch_vector_search_client(index_name, opensearch_password, bedr
 def create_bedrock_llm(bedrock_client, model_version_id):
     bedrock_llm = Bedrock(
         model_id=model_version_id, 
-        client=bedrock_client,
-        model_kwargs={'temperature': 0}
+        client=bedrock_client
+        # model_kwargs={'temperature': 0, 'maxTokens':150, 'minTokens':50}
         )
     return bedrock_llm
     
@@ -80,7 +80,7 @@ def main():
         question = "What are all AWS regions where SageMaker is available?"
         logging.info(f"No question provided, using default question {question}")
     
-    prompt_template = """Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer. don't include harmful content
+    prompt_template = """Use the following pieces of context to answer the question at the end and build a coherent and syntactically correct answer:
 
     {context}
 
@@ -94,7 +94,7 @@ def main():
 
     qa = RetrievalQA.from_chain_type(llm=bedrock_llm, 
                                      chain_type="stuff", 
-                                     retriever=opensearch_vector_search_client.as_retriever(search_kwargs={'k': 7}),
+                                     retriever=opensearch_vector_search_client.as_retriever(search_kwargs={'k': 4}),
                                      return_source_documents=True,
                                      chain_type_kwargs={"prompt": PROMPT, "verbose": False},
                                      verbose=False)
@@ -103,10 +103,14 @@ def main():
     
     logging.info("This are the similar documents from OpenSearch based on the provided query")
     source_documents = response.get('source_documents')
+    all_links=[]
     for d in source_documents:
-        logging.info(f"With the following similar content from OpenSearch:\n{d.page_content}\n")
-        logging.info(f"Text: {d.metadata['text']}")
+        # logging.info(f"With the following similar content from OpenSearch:\n{d.page_content}\n")
+        # logging.info(f"Text: {d.metadata['links']}")
+        all_links+=d.metadata['links']
     
+    all_links= list(set(all_links))
+    logging.info(f"Documentation links: {all_links}")
     logging.info(f"The answer from Bedrock {bedrock_model_id} is: {response.get('result')}")
     
 
