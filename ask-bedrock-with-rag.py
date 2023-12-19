@@ -8,6 +8,8 @@ from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain.llms.bedrock import Bedrock
 import boto3
+from textwrap import fill
+
 
 
 coloredlogs.install(fmt='%(asctime)s %(levelname)s %(message)s', datefmt='%H:%M:%S', level='INFO')
@@ -19,7 +21,7 @@ def parse_args():
     parser.add_argument("--ask", type=str, default="What is SageMaker?")
     parser.add_argument("--index", type=str, default="rag")
     parser.add_argument("--region", type=str, default="us-east-1")
-    parser.add_argument("--bedrock-model-id", type=str, default="meta.llama2-70b-chat-v1")
+    parser.add_argument("--bedrock-model-id", type=str, default="ai21.j2-ultra-v1")
     parser.add_argument("--bedrock-embedding-model-id", type=str, default="amazon.titan-embed-text-v1")
     
     return parser.parse_known_args()
@@ -51,8 +53,9 @@ def create_opensearch_vector_search_client(index_name, opensearch_password, bedr
 def create_bedrock_llm(bedrock_client, model_version_id):
     bedrock_llm = Bedrock(
         model_id=model_version_id, 
-        client=bedrock_client
-        # model_kwargs={'temperature': 0, 'maxTokens':150, 'minTokens':50}
+        client=bedrock_client,
+        # model_kwargs={'temperature': 0, 'max_gen_len':200}
+        model_kwargs={'temperature': 0.0, 'maxTokens':200, 'minTokens':50}
         )
     return bedrock_llm
     
@@ -94,7 +97,7 @@ def main():
 
     qa = RetrievalQA.from_chain_type(llm=bedrock_llm, 
                                      chain_type="stuff", 
-                                     retriever=opensearch_vector_search_client.as_retriever(search_kwargs={'k': 4}),
+                                     retriever=opensearch_vector_search_client.as_retriever(search_kwargs={'k': 40}),
                                      return_source_documents=True,
                                      chain_type_kwargs={"prompt": PROMPT, "verbose": False},
                                      verbose=False)
@@ -108,9 +111,11 @@ def main():
         # logging.info(f"With the following similar content from OpenSearch:\n{d.page_content}\n")
         # logging.info(f"Text: {d.metadata['links']}")
         all_links+=d.metadata['links']
-    
+        
+    all_links = [element for element in all_links if "#" not in element]    
     all_links= list(set(all_links))
     logging.info(f"Documentation links: {all_links}")
+    
     logging.info(f"The answer from Bedrock {bedrock_model_id} is: {response.get('result')}")
     
 
