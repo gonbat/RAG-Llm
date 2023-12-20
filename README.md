@@ -7,11 +7,9 @@ After we successfully loaded embeddings into OpenSearch, we will then start quer
 You can use `--bedrock-model-id` parameter, to seamlessly choose one of the available foundation model in Amazon Bedrock, that defaults to [Meta Llama2 v1] and can be replaced to any other model from any other model provider to choose your best performing foundation model.
 
 ## Examples:
-- Default (Llama2 70b  chat v1) `python ./ask-bedrock-with-rag.py  --ask "What are SageMaker Geospatial capabilities?"`
+- Default (Jurassic-2 Ultra) `python ask-bedrock-with-rag.py  --ask "What are SageMaker Geospatial capabilities?"`
 
-- Claude v1.3 `python ./ask-bedrock-with-rag.py --bedrock-model-id anthropic.claude-v1 --ask "How to check if an endpoint is KMS encrypted?"`
-
-- Jurassic-2 Ultra `python ./ask-bedrock-with-rag.py --bedrock-model-id ai21.j2-ultra-v1 --ask "What is SageMaker?"`
+- Llama 2 Chat 70B `python ask-bedrock-with-rag.py --bedrock-model-id meta.llama2-70b-chat-v1 --ask "What is SageMaker?"`
 
 
 ## Prerequisites

@@ -8,7 +8,6 @@ from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain.llms.bedrock import Bedrock
 import boto3
-from textwrap import fill
 
 
 
@@ -55,7 +54,7 @@ def create_bedrock_llm(bedrock_client, model_version_id):
         model_id=model_version_id, 
         client=bedrock_client,
         # model_kwargs={'temperature': 0, 'max_gen_len':200}
-        model_kwargs={'temperature': 0.0, 'maxTokens':200, 'minTokens':50}
+        model_kwargs={'temperature': 0, 'maxTokens':250, 'minTokens':50}
         )
     return bedrock_llm
     
@@ -94,14 +93,20 @@ def main():
     )
     
     logging.info(f"Starting the chain with KNN similarity using OpenSearch, Bedrock FM {bedrock_model_id}, and Bedrock embeddings with {bedrock_embedding_model_id}")
-
-    qa = RetrievalQA.from_chain_type(llm=bedrock_llm, 
-                                     chain_type="stuff", 
-                                     retriever=opensearch_vector_search_client.as_retriever(search_kwargs={'k': 40}),
-                                     return_source_documents=True,
-                                     chain_type_kwargs={"prompt": PROMPT, "verbose": False},
-                                     verbose=False)
-    
+ 
+    qa = RetrievalQA.from_chain_type(
+        llm=bedrock_llm, 
+        chain_type="stuff", 
+        retriever=opensearch_vector_search_client.as_retriever(
+            search_kwargs={
+                'k': 40 
+                # 'post_filter': {'match': {'text': 'Geospatial'}}
+            }
+        ),
+        return_source_documents=True,
+        chain_type_kwargs={"prompt": PROMPT, "verbose": False},
+        verbose=False
+    )
     response = qa(question, return_only_outputs=False)
     
     logging.info("This are the similar documents from OpenSearch based on the provided query")
@@ -111,9 +116,10 @@ def main():
         # logging.info(f"With the following similar content from OpenSearch:\n{d.page_content}\n")
         # logging.info(f"Text: {d.metadata['links']}")
         all_links+=d.metadata['links']
-        
-    all_links = [element for element in all_links if "#" not in element]    
+
+    all_links = [element for element in all_links if "#" not in element]  
     all_links= list(set(all_links))
+    logging.info(f"Documentation numbers: {len(all_links)}")
     logging.info(f"Documentation links: {all_links}")
     
     logging.info(f"The answer from Bedrock {bedrock_model_id} is: {response.get('result')}")
