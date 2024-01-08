@@ -1,4 +1,4 @@
-# Loka Machine Learning challenge  using LangChain with Amazon Bedrock Titan text, and embedding, using OpenSearch vector engine.
+# LangChain with Amazon Bedrock Titan text, and embedding, using OpenSearch vector engine.
 
 I use RAG (Retrieval augmented generation) method relaying on [Amazon Bedrock](https://aws.amazon.com/bedrock/) [Titan Embeddings Generation 1 (G1)](https://aws.amazon.com/bedrock/titan/) LLM (Large Language Model), for creating text embedding that will be stored in [Amazon OpenSearch](https://aws.amazon.com/opensearch-service/) with [vector engine support](https://aws.amazon.com/about-aws/whats-new/2023/07/vector-engine-amazon-opensearch-serverless-preview/) for assisting with the prompt engineering task for more accurate response from LLMs.
 
@@ -44,7 +44,7 @@ You can use `--bedrock-model-id` parameter, to seamlessly choose one of the avai
     ```
 
 
-2. Now that we have a running OpenSearch cluster with vector engine support we will start uploading our data that will help us with prompt engineering. We are going to use the Sagemaker docs that are upload in an S3 bucket 'sagemakerdocs' under the prefix 'sagemaker_documentation', we will download it, and invoke Titan embedding to get a text embedding, that we will store in OpenSearch for next steps.
+2. Now that we have a running OpenSearch cluster with vector engine support we will start uploading our data that will help us with prompt engineering. We are going to use the Sagemaker docs that are upload in an S3 bucket 'sagemakerdocs' under the prefix 'sagemaker_documentation' (you can use whatever documentation you want, of course), we will download it, and invoke Titan embedding to get a text embedding, that we will store in OpenSearch for next steps.
 
     ```bash
     python load-data-to-opensearch.py --recreate 1
